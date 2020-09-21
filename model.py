@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from faker import Faker
 
-Faker.seed(0)
+#Faker.seed(0)
 faker = Faker()
 
 app = Flask(__name__)
@@ -28,7 +28,7 @@ class Book(db.Model):
     copies = db.relationship('BookCopy', backref='book')
 
     def __str__(self):
-        return f"\"{self.title}\" {', '.join(map(str, self.authors))}"
+        return f"\"{self.title}\" {', '.join(map(str, sorted(self.authors, key=lambda author: author.last_name)))}"
 
 class Author(db.Model):
 
@@ -43,21 +43,25 @@ class Author(db.Model):
 class BookCopy(db.Model):
 
     book_copy_id = db.Column(db.Integer, primary_key=True)
+    book_id = db.Column(db.Integer, db.ForeignKey('book.book_id'))
 
     damaged = db.Column(db.Boolean, default=False)
 
-    book_id = db.Column(db.Integer, db.ForeignKey('book.book_id'))
-#    book_loans = db.relationship('Book_loan', backref = 'book_loans_item')
+    loans = db.relationship('BookLoan', backref='book_copy', lazy='dynamic')
 
     def __str__(self):
-        return f"{self.book} ['damaged' if self.damaged else 'available']"
+        return f"{self.book} [{'damaged' if self.damaged else 'available'}]"
 
-"""
-class Book_loan(db.Model):
+class BookLoan(db.Model):
+
     book_loan_id = db.Column(db.Integer, primary_key=True)
-    loan_date = db.Column(db.Integer)
-    book_copy_loan_id = db.Column(db.Integer, db.ForeignKey('book_copy.book_copy_id'))
-"""
+    book_copy_id = db.Column(db.Integer, db.ForeignKey('book_copy.book_copy_id'))
+
+    loan_date = db.Column(db.Date, nullable=False)
+    return_date = db.Column(db.Date, nullable=True)
+
+    def __str__(self):
+        return f"{self.loan_date} - {'?' if self.return_date is None else self.return_date}"
 
 db.create_all()
 
@@ -72,7 +76,9 @@ books = [
     Book(
         title=faker.catch_phrase(),
         authors=faker.random_choices(authors, faker.random_int(1, 3)),
-        copies=[BookCopy() for _ in range(faker.random_int(1, 5))]
+        copies=[BookCopy(
+            damaged=faker.boolean(chance_of_getting_true=10)
+        ) for _ in range(faker.random_int(1, 5))]
     ) for _ in range(20)
 ]
 
@@ -80,8 +86,23 @@ db.session.add_all(authors)
 db.session.add_all(books)
 db.session.commit()
 
+for copy in db.session.query(BookCopy).filter(BookCopy.damaged.is_(False)):
+    copy.loans = [
+        BookLoan(
+            loan_date=faker.date_between(f'{2*n}w', f'{2*n+1}w'),
+            return_date=faker.date_between(f'{2*n+1}w', f'{2*n+2}w')
+        ) for n in range(-faker.random_int(2, 6), -1)
+    ]
+    if faker.boolean(chance_of_getting_true=25):
+        copy.loans.append(BookLoan(loan_date=faker.date_between('-1w')))
+    db.session.add(copy)
+db.session.commit()
+
 for book in db.session.query(Book).order_by(Book.title.asc()):
-    print(f'{book} -> available: {sum(1 for copy in book.copies if not copy.damaged)}')
+    for n, copy in enumerate(book.copies, 1):
+        print(f'{n}/{len(book.copies)} - {copy}')
+        for loan in copy.loans.order_by(BookLoan.loan_date.asc()):
+            print(f' - {loan}')
 
 """
 book1 = Book(book_title = 'Litte Miss Bossy')
