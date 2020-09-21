@@ -25,7 +25,7 @@ class Book(db.Model):
     title = db.Column(db.String(200))
 
     authors = db.relationship('Author', secondary=book_author , backref=db.backref('books', lazy='dynamic'))
-    copies = db.relationship('BookCopy', backref = 'book')
+    copies = db.relationship('BookCopy', backref='book')
 
     def __str__(self):
         return f"\"{self.title}\" {', '.join(map(str, self.authors))}"
@@ -49,6 +49,9 @@ class BookCopy(db.Model):
     book_id = db.Column(db.Integer, db.ForeignKey('book.book_id'))
 #    book_loans = db.relationship('Book_loan', backref = 'book_loans_item')
 
+    def __str__(self):
+        return f"{self.book} ['damaged' if self.damaged else 'available']"
+
 """
 class Book_loan(db.Model):
     book_loan_id = db.Column(db.Integer, primary_key=True)
@@ -68,7 +71,8 @@ authors = [
 books = [
     Book(
         title=faker.catch_phrase(),
-        authors=faker.random_choices(authors, faker.random_int(1, 3))
+        authors=faker.random_choices(authors, faker.random_int(1, 3)),
+        copies=[BookCopy() for _ in range(faker.random_int(1, 5))]
     ) for _ in range(20)
 ]
 
@@ -76,8 +80,8 @@ db.session.add_all(authors)
 db.session.add_all(books)
 db.session.commit()
 
-for book in db.session.query(Book):
-    print(book)
+for book in db.session.query(Book).order_by(Book.title.asc()):
+    print(f'{book} -> available: {sum(1 for copy in book.copies if not copy.damaged)}')
 
 """
 book1 = Book(book_title = 'Litte Miss Bossy')
