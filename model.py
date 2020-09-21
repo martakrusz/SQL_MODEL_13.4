@@ -1,11 +1,12 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
-from config import Config
 from datetime import datetime
 
 app = Flask(__name__)
 
-app.config.from_object(Config)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///model.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
 db = SQLAlchemy(app)
 
 book_author = db.Table('book_author',
@@ -38,6 +39,7 @@ class Book_loan(db.Model):
 
 db.create_all()
 
+"""
 book1 = Book(book_title = 'Litte Miss Bossy')
 book2 = Book(book_title = 'Litte Miss Naughty')
 book3 = Book(book_title = 'Litte Miss Neat')
@@ -65,3 +67,4 @@ book2_loan_date2 = Book_loan(loan_date=2010, book_Loans_item = book4)
 db.session.add(book1_loan_date1)
 db.session.add(book2_loan_date2)
 db.session.commit()
+"""
