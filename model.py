@@ -44,7 +44,7 @@ class BookCopy(db.Model):
 
     book_copy_id = db.Column(db.Integer, primary_key=True)
 
-    publication_date = db.Column(db.Date)
+    damaged = db.Column(db.Boolean, default=False)
 
     book_id = db.Column(db.Integer, db.ForeignKey('book.book_id'))
 #    book_loans = db.relationship('Book_loan', backref = 'book_loans_item')
