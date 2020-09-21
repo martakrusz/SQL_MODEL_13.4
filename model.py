@@ -16,15 +16,19 @@ book_author = db.Table('book_author',
 
 class Book(db.Model):
     book_id = db.Column(db.Integer, primary_key=True)
-    book_title = db.Column(db.String(200))
-    authors_of_book = db.relationship('Author', secondary=book_author , backref= db.backref('authors', lazy= 'dynamic'))
-    book_copies = db.relationship('Book_copy', backref = 'book_item')
+
+    title = db.Column(db.String(200))
+
+    authors = db.relationship('Author', secondary=book_author , backref=db.backref('books', lazy='dynamic'))
+#    book_copies = db.relationship('Book_copy', backref = 'book_item')
 
 class Author(db.Model):
     author_id = db.Column(db.Integer, primary_key=True)
-    author_name = db.Column(db.String(200))
-    author_lastname = db.Column(db.String(200))
 
+    first_name = db.Column(db.String(200))
+    last_name = db.Column(db.String(200))
+
+"""
 class Book_copy(db.Model):
     book_copy_id = db.Column(db.Integer, primary_key=True)
     publication_date = db.Column(db.Integer)
@@ -35,7 +39,7 @@ class Book_loan(db.Model):
     book_loan_id = db.Column(db.Integer, primary_key=True)
     loan_date = db.Column(db.Integer)
     book_copy_loan_id = db.Column(db.Integer, db.ForeignKey('book_copy.book_copy_id'))
-
+"""
 
 db.create_all()
 
@@ -68,3 +72,5 @@ db.session.add(book1_loan_date1)
 db.session.add(book2_loan_date2)
 db.session.commit()
 """
+
+#db.drop_all()
