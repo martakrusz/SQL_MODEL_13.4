@@ -1,6 +1,9 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from faker import Faker
+
+faker = Faker('pl_PL')
 
 app = Flask(__name__)
 
@@ -42,6 +45,24 @@ class Book_loan(db.Model):
 """
 
 db.create_all()
+
+authors = [
+    Author(
+        first_name=faker.first_name(),
+        last_name=faker.last_name()
+    ) for _ in range(10)
+]
+
+books = [
+    Book(
+        title=faker.catch_phrase(),
+        authors=faker.random_choices(authors, faker.random_int(1, 3))
+    ) for _ in range(20)
+]
+
+db.session.add_all(authors)
+db.session.add_all(books)
+db.session.commit()
 
 """
 book1 = Book(book_title = 'Litte Miss Bossy')
