@@ -3,7 +3,8 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from faker import Faker
 
-faker = Faker('pl_PL')
+Faker.seed(0)
+faker = Faker()
 
 app = Flask(__name__)
 
@@ -25,11 +26,17 @@ class Book(db.Model):
     authors = db.relationship('Author', secondary=book_author , backref=db.backref('books', lazy='dynamic'))
 #    book_copies = db.relationship('Book_copy', backref = 'book_item')
 
+    def __str__(self):
+        return f"\"{self.title}\" {', '.join(map(str, self.authors))}"
+
 class Author(db.Model):
     author_id = db.Column(db.Integer, primary_key=True)
 
     first_name = db.Column(db.String(200))
     last_name = db.Column(db.String(200))
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name}"
 
 """
 class Book_copy(db.Model):
@@ -63,6 +70,9 @@ books = [
 db.session.add_all(authors)
 db.session.add_all(books)
 db.session.commit()
+
+for book in db.session.query(Book):
+    print(book)
 
 """
 book1 = Book(book_title = 'Litte Miss Bossy')
